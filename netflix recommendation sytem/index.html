@@ -1,0 +1,145 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#141414" />
+    <title>MovieAI — Your next great watch</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <header class="nav">
+      <a class="logo" href="./index.html" aria-label="Movie AI home"
+        >MOVIE<span>AI</span></a
+      >
+      <nav aria-label="Main navigation">
+        <button class="nav-link active" data-view="home">Home</button
+        ><button class="nav-link" data-view="browse">Movies</button
+        ><button class="nav-link" data-view="list">My List</button>
+      </nav>
+      <div class="nav-right">
+        <a href="#discover" class="ai-link">✦ AI discovery</a
+        ><span class="profile" aria-label="Your profile">B</span>
+      </div>
+    </header>
+    <main>
+      <section class="hero" aria-labelledby="heroTitle">
+        <div class="hero-art"></div>
+        <div class="hero-content">
+          <div class="eyebrow">
+            <span class="red-mark">M</span> THE SPOTLIGHT
+          </div>
+          <p class="hero-kicker">BEYOND THE STARS. BEYOND THE ORDINARY.</p>
+          <h1 id="heroTitle">INTERSTELLAR</h1>
+          <div class="meta">
+            <span class="green">Featured pick</span><span>2014</span
+            ><span class="rating">13+</span><span>2h 49m</span
+            ><span class="quality">HD</span>
+          </div>
+          <p class="hero-description">
+            A journey beyond our galaxy. A love that transcends time.<br />A
+            team of explorers ventures into the unknown to find a future for
+            humanity.
+          </p>
+          <div class="hero-actions">
+            <button class="button white" id="heroDetails">
+              ▶ Explore movie</button
+            ><button class="button translucent" id="heroSave">
+              ＋ My List
+            </button>
+          </div>
+          <div class="hero-note">
+            <span>✦</span> Your next great watch is out there.
+          </div>
+        </div>
+        <div class="hero-side">SCI-FI · ADVENTURE · DRAMA</div>
+      </section>
+      <section class="discovery" id="discover">
+        <div class="discovery-heading">
+          <div>
+            <p class="eyebrow">✦ MADE FOR YOUR MOOD</p>
+            <h2>Less scrolling. More watching.</h2>
+            <p>
+              Tell us what you're in the mood for. We'll find your next
+              favorite.
+            </p>
+          </div>
+          <span class="ai-badge">AI-powered discovery</span>
+        </div>
+        <form id="searchForm">
+          <label class="sr-only" for="searchInput"
+            >Describe the movie you want</label
+          ><span aria-hidden="true">✦</span
+          ><input
+            id="searchInput"
+            maxlength="500"
+            placeholder="A mind-bending thriller that keeps me guessing…"
+            required
+          /><button class="button red" id="searchButton">
+            Find my movie <span>→</span>
+          </button>
+        </form>
+        <div class="prompts">
+          <span>Try a mood</span
+          ><button data-query="sci-fi space adventure">
+            🚀 Out of this world</button
+          ><button data-query="mystery thriller secrets">✦ Mind-bending</button
+          ><button data-query="friendship family inspiring comedy">
+            ☀ Feel-good night</button
+          ><button data-query="horror supernatural terrifying">
+            ☾ A little scary
+          </button>
+        </div>
+        <p id="searchStatus" role="status"></p>
+      </section>
+      <div class="catalog-area">
+        <section id="searchSection" hidden>
+          <div class="section-heading">
+            <h2 id="resultsTitle">Your picks</h2>
+            <button class="text-button" id="clearSearch">Clear search ×</button>
+          </div>
+          <div id="searchResults" class="movie-row"></div>
+        </section>
+        <section>
+          <div class="section-heading">
+            <div>
+              <h2 id="catalogTitle">Tonight's lineup</h2>
+              <p id="catalogSubtitle">
+                Great stories. One unforgettable night.
+              </p>
+            </div>
+            <span id="movieCount" class="muted"></span>
+          </div>
+          <div class="filters" id="filters">
+            <button class="selected" data-filter="all">All movies</button
+            ><button data-filter="sci-fi">Sci-fi</button
+            ><button data-filter="thriller">Thrillers</button
+            ><button data-filter="drama">Drama</button
+            ><button data-filter="comedy">Feel-good</button>
+          </div>
+          <div id="movieCatalog" class="movie-grid">
+            <p role="status">Loading your lineup…</p>
+          </div>
+        </section>
+      </div>
+    </main>
+    <footer>
+      <a class="logo" href="./index.html">MOVIE<span>AI</span></a>
+      <p>A little intelligence. A lot of great cinema.</p>
+      <span>An independent movie discovery project.</span>
+    </footer>
+    <dialog id="movieModal" aria-labelledby="detailTitle">
+      <button class="close" id="closeModal" aria-label="Close movie details">
+        ×
+      </button>
+      <div id="selectedMovie"></div>
+      <div class="similar-section">
+        <h2>More like this</h2>
+        <p id="similarStatus" role="status"></p>
+        <div id="similarMovies" class="movie-row"></div>
+      </div>
+    </dialog>
+  </body>
+</html>
+
