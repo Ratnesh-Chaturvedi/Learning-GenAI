@@ -1,0 +1,142 @@
+this is a kind of code that we can use to run a minimal mcp server with little things 
+
+
+import "dotenv/config";
+import express from "express";
+import { GoogleGenAI } from "@google/genai";
+import {
+  Client,
+  StreamableHTTPClientTransport,
+} from "@modelcontextprotocol/client";
+
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error("Set GEMINI_API_KEY in the .env file");
+}
+
+const mcpClient = new Client({
+  name: "Task MCP client",
+  version: "1.0.0",
+});
+
+const transport = new StreamableHTTPClientTransport(
+  new URL(
+    process.env.MCP_SERVER_URL ?? "http://localhost:8081/mcp"
+  )
+);
+
+await mcpClient.connect(transport);
+
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+});
+
+const { tools } = await mcpClient.listTools();
+
+console.log(
+  "Available MCP tools:",
+  tools.map((tool) => tool.name)
+);
+
+const toolNames = new Set(tools.map((tool) => tool.name));
+
+const geminiTools = [
+  {
+    functionDeclarations: tools.map((tool) => ({
+      name: tool.name,
+      description: tool.description ?? "",
+      parametersJsonSchema: tool.inputSchema,
+    })),
+  },
+];
+
+const app = express();
+
+app.get("/ask", async (request, response) => {
+  const message = request.query.message;
+
+  if (typeof message !== "string" || !message.trim()) {
+    return response
+      .status(400)
+      .send("Query parameter 'message' is required");
+  }
+
+  try {
+    const result = await ai.models.generateContent({
+      model: "gemini-3.5-flash-lite",
+      contents: message,
+      config: {
+        systemInstruction:
+          "Use the MCP task tools to handle every task-management request.",
+        tools: geminiTools,
+      },
+    });
+
+    const functionCalls = result.functionCalls ?? [];
+
+    if (functionCalls.length === 0) {
+      return response.send(String(result.text ?? ""));
+    }
+
+    const functionResponses = await Promise.all(
+      functionCalls.map(async (call) => {
+        const toolName = toolNames.has(call.name)
+          ? call.name
+          : call.name.replace(/^mcp:/, "");
+
+        if (!toolNames.has(toolName)) {
+          throw new Error(
+            `Tool "${call.name}" was not found. Available tools: ${
+              [...toolNames].join(", ")
+            }`
+          );
+        }
+
+        const toolResult = await mcpClient.callTool({
+          name: toolName,
+          arguments: call.args ?? {},
+        });
+
+        return {
+          functionResponse: {
+            name: call.name,
+            response: toolResult,
+          },
+        };
+      })
+    );
+
+    const modelContent = result.candidates?.[0]?.content;
+
+    if (!modelContent) {
+      throw new Error("Gemini did not return the function-call content");
+    }
+
+    const finalResult = await ai.models.generateContent({
+      model: "gemini-3.5-flash-lite",
+      contents: [
+        { role: "user", parts: [{ text: message }] },
+        modelContent,
+        { role: "user", parts: functionResponses },
+      ],
+    });
+
+    return response.send(String(finalResult.text ?? ""));
+  } catch (error) {
+    console.error("Request failed:", error);
+    return response.status(500).send("Unable to process the request");
+  }
+});
+
+const httpServer = app.listen(8080, "127.0.0.1", () => {
+  console.log(
+    "Task client running at port 8080"
+  );
+});
+
+async function shutdown() {
+  await mcpClient.close();
+  httpServer.close();
+}
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
